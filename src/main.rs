@@ -1,7 +1,8 @@
 use futures::join;
-use async_std;
+use tokio::prelude::*;
 use warp::{Filter, Buf, http::StatusCode, Rejection};
 use reqwest;
+use structopt::StructOpt;
 
 #[derive(Clone, Copy)]
 struct Ports {
@@ -9,24 +10,46 @@ struct Ports {
     stable: u16,
 }
 
-#[async_std::main]
-async fn main() {
-    let port_self: u16 = 38972;
-    let ports = Ports {
-        dev: 8443,
-        stable: 443,
-    };
+impl From<Opt> for Ports {
+    fn from(o: Opt) -> Ports {
+        Ports {
+            dev: o.port_dev,
+            stable: o.port_stable,
+        }
+    }
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(name = "datasplitter", about = "splits traffic on urls \
+ \\post_error and \\post_data between two different ports")]
+struct Opt {
+    #[structopt(short = "l", long = "listen_on", default_value = "38972")]
+    port_self: u16,
+
+    #[structopt(short = "s", long = "stable_server_port", default_value = "443")]
+    port_stable: u16,
+
+    #[structopt(short = "d", long = "dev_server_port", default_value = "8443")]
+    port_dev: u16,
+}
+
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    
+    let opt = Opt::from_args();
+    let port_self = opt.port_self;
+    let ports = Ports::from(opt);
 
     // Turn ports into new filter
     let ports = warp::any().map(move || ports);
 
-    let error = warp::path("/post_error")
+    let error = warp::path("post_error")
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::aggregate())
         .and(ports)
         .and_then(handle_error);
 
-    let data = warp::path("/post_data")
+    let data = warp::path("post_data")
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::aggregate())
         .and(ports)
@@ -36,10 +59,12 @@ async fn main() {
 
     warp::serve(routes)
         .tls()
-        .cert_path("keys/cert.pem")
-        .key_path("keys/key.rsa")
+        .cert_path("keys/cert.cert")
+        .key_path("keys/user.key")
         .run(([0u8, 0, 0, 0], port_self))
         .await;
+    
+    Ok(())
 }
 
 async fn handle_data(mut body: impl Buf, ports: Ports)
