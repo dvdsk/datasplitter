@@ -3,6 +3,7 @@ use tokio::prelude::*;
 use warp::{Filter, Buf, http::StatusCode, Rejection};
 use reqwest;
 use structopt::StructOpt;
+use std::path::PathBuf;
 
 #[derive(Clone, Copy)]
 struct Ports {
@@ -19,7 +20,7 @@ impl From<Opt> for Ports {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, StructOpt, Clone)]
 #[structopt(name = "datasplitter", about = "splits traffic on urls \
  \\post_error and \\post_data between two different ports")]
 struct Opt {
@@ -31,14 +32,19 @@ struct Opt {
 
     #[structopt(short = "d", long = "dev_server_port", default_value = "8443")]
     port_dev: u16,
+
+    #[structopt(short = "k", long = "private_key", default_value = "keys/user.key")]
+    key_path: PathBuf,
+
+    #[structopt(short = "c", long = "signed_certificate", default_value = "keys/cert.cert")]
+    cert_path: PathBuf,
 }
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     
     let opt = Opt::from_args();
-    let port_self = opt.port_self;
-    let ports = Ports::from(opt);
+    let ports = Ports::from(opt.clone());
 
     // Turn ports into new filter
     let ports = warp::any().map(move || ports);
@@ -59,9 +65,9 @@ async fn main() -> std::io::Result<()> {
 
     warp::serve(routes)
         .tls()
-        .cert_path("keys/cert.cert")
-        .key_path("keys/user.key")
-        .run(([0u8, 0, 0, 0], port_self))
+        .cert_path(opt.cert_path)
+        .key_path(opt.key_path)
+        .run(([0u8, 0, 0, 0], opt.port_self))
         .await;
     
     Ok(())
