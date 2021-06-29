@@ -19,5 +19,5 @@ futures = "0.3.1"
 actix-rt = "1.0"
 actix-web = { version = "2" }
 
-reqwest = { version = "0.10", features = ["rustls-tls"] }
+reqwest = { version = "0.10", default-features=false, features = ["rustls-tls"] }
 structopt = { version = "0.3" }

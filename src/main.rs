@@ -65,11 +65,11 @@ async fn handle_data(state: Data<Ports>, body: Bytes)
 
     let client = reqwest::Client::new();
     let resp_stable = client
-        .post(&format!("https://127.0.0.1:{}/post_data", ports.stable))
+        .post(&format!("http://127.0.0.1:{}/post_data", ports.stable))
         .body(body.clone())
         .send();
     let resp_dev = client
-        .post(&format!("https://127.0.0.1:{}/post_data", ports.dev))
+        .post(&format!("http://127.0.0.1:{}/post_data", ports.dev))
         .body(body)
         .send();
 
@@ -97,11 +97,11 @@ async fn handle_error(state: Data<Ports>, body: Bytes)
 
     let client = reqwest::Client::new();
     let resp_stable = client
-        .post(&format!("https://127.0.0.1:{}/post_error", ports.stable))
+        .post(&format!("http://127.0.0.1:{}/post_error", ports.stable))
         .body(body.clone())
         .send();
     let resp_dev = client
-        .post(&format!("https://127.0.0.1:{}/post_error", ports.dev))
+        .post(&format!("http://127.0.0.1:{}/post_error", ports.dev))
         .body(body)
         .send();
 
