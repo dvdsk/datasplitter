@@ -28,13 +28,13 @@ impl From<Opt> for Ports {
 #[structopt(name = "datasplitter", about = "splits traffic on urls \
  \\post_error and \\post_data between two different ports")]
 struct Opt {
-    #[structopt(short = "l", long = "listen_on")]
+    #[structopt(long = "port")]
     port_self: u16,
 
-    #[structopt(short = "s", long = "stable_server_port")]
+    #[structopt(long = "port-stable-server")]
     port_stable: u16,
 
-    #[structopt(short = "d", long = "dev_server_port")]
+    #[structopt(long = "port-dev-server")]
     port_dev: u16,
 }
 
