@@ -10,7 +10,6 @@ if [[ BUILD_ARG == "--release" ]]; then
 	RELEASE=release
 fi
 
-rustup override set nightly
 cross build --target=aarch64-unknown-linux-gnu $BUILD_ARG
 rsync -vh --progress \
   target/aarch64-unknown-linux-gnu/$RELEASE/$NAME \
